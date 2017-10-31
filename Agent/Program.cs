@@ -13,15 +13,18 @@ namespace Agent
 {
     class Program
     {
-        private static bool isCommentEnabled = true;
-        private static bool isLogEnabled = true;
-        private static string ip = "";
-        private static string name = "";
+        public static bool isCommentEnabled = true;
+        public static bool isLogEnabled = true;
+        
         private static int cpu;
         private static int mem;
 
+        
+
         static void Main(string[] args)
         {
+            string ip = "192.168.1.8";
+            string name = "a";
             for (int i = 0; i < args.Length; i++)
             {
                 if (args[i] == "/addr")
@@ -33,8 +36,14 @@ namespace Agent
                 if (args[i] == "/nocomment")
                     isCommentEnabled = false;
             }
+
+            Sender.Init(ip,name);
+            if(isLogEnabled)
+                Logging.Init(name);
+
             Console.WriteLine("Press Q to quit");
-            Timer timer = new Timer(GetPerformance,null,1000,40);
+            Timer timer = new Timer(Send,null,1000,35);
+            
 
             while (Console.ReadKey(true).Key != ConsoleKey.Q)
             {
@@ -42,15 +51,27 @@ namespace Agent
             }
 
             timer.Dispose();
+            if (isLogEnabled)
+                Logging.EndLogging();
             Console.WriteLine("Test");
 
         }
 
-
-        static void GetPerformance(object sender)
+        public static bool IsCommentEnabled
         {
-            SysPerfomance.GetPerformance(out cpu, out mem);
+            get => isCommentEnabled;
+            set => isCommentEnabled = value;
+        }
 
+        public static bool IsLogEnabled
+        {
+            get => isLogEnabled;
+            set => isLogEnabled = value;
+        }
+
+        static void Send(object sender)
+        {
+            Sender.Send();
         }
         
     }
