@@ -16,11 +16,6 @@ namespace Agent
         public static bool isCommentEnabled = true;
         public static bool isLogEnabled = true;
         
-        private static int cpu;
-        private static int mem;
-
-        
-
         static void Main(string[] args)
         {
             string ip = "192.168.1.8";
@@ -40,8 +35,9 @@ namespace Agent
             Sender.Init(ip,name);
             if(isLogEnabled)
                 Logging.Init(name);
+            if(IsCommentEnabled)
+                Console.WriteLine("Press Q to quit");
 
-            Console.WriteLine("Press Q to quit");
             Timer timer = new Timer(Send,null,1000,35);
             
 
