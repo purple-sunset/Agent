@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Agent
 {
-    class Logging
+    class Logger
     {
         private static string fileLocation = "";
         private static FileStream fs;
@@ -23,9 +23,12 @@ namespace Agent
 
         public static void Write(string message)
         {
+            
             str.WriteLine(DateTime.Now + " " + message);
             str.Flush();
             
+            
+
         }
 
         public static void EndLogging()

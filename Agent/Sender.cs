@@ -13,7 +13,7 @@ namespace Agent
 {
     class Sender
     {
-        private static string ip = "";
+        private static string host = "";
         private static string name = "";
         private static string url = "";
 
@@ -21,11 +21,11 @@ namespace Agent
         private static int mem;
         private static int n = 0;
 
-        public static void Init(string ip, string name)
+        public static void Init(string host, string name)
         {
-            Sender.ip = ip;
+            Sender.host = host;
             Sender.name = name;
-            url = @"http://" + ip + @"/Receive/";
+            url = @"http://" + Sender.host + @"/api/set/";
         }
 
         public static void Send()
@@ -79,7 +79,7 @@ namespace Agent
         {
             if (Program.IsLogEnabled)
             {
-                Logging.Write(code.ToString());
+                Logger.Write(code.ToString());
             }
         }
     }

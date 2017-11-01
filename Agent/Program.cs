@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -15,42 +16,25 @@ namespace Agent
     {
         public static bool isCommentEnabled = true;
         public static bool isLogEnabled = true;
-        
+        public static bool isCheckEnabled = true;
+
         static void Main(string[] args)
         {
-            string ip = "192.168.1.8";
-            string name = "a";
-            for (int i = 0; i < args.Length; i++)
+            if (Init(args))
             {
-                if (args[i] == "/addr")
-                    ip = args[i + 1];
-                if (args[i] == "/name")
-                    name = args[i + 1];
-                if (args[i] == "/nolog")
-                    isLogEnabled = false;
-                if (args[i] == "/nocomment")
-                    isCommentEnabled = false;
+                Timer timer = new Timer(Send, null, 1000, 35);
+
+                while (Console.ReadKey(true).Key != ConsoleKey.Q)
+                {
+
+                }
+
+                timer.Dispose();
+                if (isLogEnabled)
+                    Logger.EndLogging();
+                Console.WriteLine("Exitting");
             }
-
-            Sender.Init(ip,name);
-            if(isLogEnabled)
-                Logging.Init(name);
-            if(IsCommentEnabled)
-                Console.WriteLine("Press Q to quit");
-
-            Timer timer = new Timer(Send,null,1000,35);
             
-
-            while (Console.ReadKey(true).Key != ConsoleKey.Q)
-            {
-
-            }
-
-            timer.Dispose();
-            if (isLogEnabled)
-                Logging.EndLogging();
-            Console.WriteLine("Test");
-
         }
 
         public static bool IsCommentEnabled
@@ -65,7 +49,97 @@ namespace Agent
             set => isLogEnabled = value;
         }
 
-        static void Send(object sender)
+        static bool Init(string[] paramStrings)
+        {
+            string host = "192.168.1.8";
+            string name = "Server";
+            for (int i = 0; i < paramStrings.Length; i++)
+            {
+                if (paramStrings[i] == "/host")
+                {
+                    if (ParseHost(paramStrings[i + 1]))
+                        host = paramStrings[i + 1];
+                    else
+                    {
+                        Console.WriteLine("Cannot verify host");
+                        return false;
+                    }
+                }
+                if (paramStrings[i] == "/name")
+                {
+                    if (ParseName(paramStrings[i + 1]))
+                        name = paramStrings[i + 1];
+                    else
+                    {
+                        Console.WriteLine("Cannot verify name");
+                        return false;
+                    }
+                }
+                if (paramStrings[i] == "/nolog")
+                    isLogEnabled = false;
+                if (paramStrings[i] == "/nocomment")
+                    isCommentEnabled = false;
+                if (paramStrings[i] == "/nocheck")
+                    isCheckEnabled = false;
+
+            }
+
+            Sender.Init(host, name);
+            if (isLogEnabled)
+                Logger.Init(name);
+            if (IsCommentEnabled)
+            {
+                Console.WriteLine("Sending data to " + host);
+                Console.WriteLine("Press Q to quit");
+            }
+            return true;
+
+        }
+
+        static bool ParseName(string s)
+        {
+            if (isCheckEnabled)
+            {
+                return Regex.IsMatch(s, @"^[\w]{1,10}$");
+            }
+            return true;
+        }
+
+        static bool ParseHost(string s)
+        {
+            if (isCheckEnabled)
+            {
+                var values = s.Split(':');
+                int n = values.Length;
+                if (n > 2)
+                {
+                    return false;
+                } 
+                else if (n > 0)
+                {
+                    var subvalues = values[0].Split('.');
+                    if (subvalues.Length != 4)
+                    {
+                        return false;
+                    }
+
+                    if (n == 2)
+                    {
+                        int port;
+                        if (!Int32.TryParse(values[1], out port))
+                            return false;
+                    }
+
+                    byte tempForParsing;
+                    if(values.Length == 2)
+                    return subvalues.All(r => byte.TryParse(r, out tempForParsing));
+                }
+                return false;
+            }
+            return true;
+        }
+
+    static void Send(object sender)
         {
             Sender.Send();
         }
