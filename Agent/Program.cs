@@ -22,7 +22,7 @@ namespace Agent
         {
             if (Init(args))
             {
-                Timer timer = new Timer(Send, null, 1000, 40);
+                Timer timer = new Timer(Send, null, 1000, 32);
 
                 while (Console.ReadKey(true).Key != ConsoleKey.Q)
                 {
