@@ -22,7 +22,7 @@ namespace Agent
         {
             if (Init(args))
             {
-                Timer timer = new Timer(Send, null, 1000, 35);
+                Timer timer = new Timer(Send, null, 1000, 40);
 
                 while (Console.ReadKey(true).Key != ConsoleKey.Q)
                 {
@@ -51,7 +51,7 @@ namespace Agent
 
         static bool Init(string[] paramStrings)
         {
-            string host = "192.168.1.8";
+            string host = "192.168.1.1";
             string name = "Server";
             for (int i = 0; i < paramStrings.Length; i++)
             {
@@ -131,7 +131,6 @@ namespace Agent
                     }
 
                     byte tempForParsing;
-                    if(values.Length == 2)
                     return subvalues.All(r => byte.TryParse(r, out tempForParsing));
                 }
                 return false;

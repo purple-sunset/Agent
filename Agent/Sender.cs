@@ -15,7 +15,7 @@ namespace Agent
     {
         private static string host = "";
         private static string name = "";
-        private static string url = "";
+        private static string baseUrl = "";
 
         private static int cpu;
         private static int mem;
@@ -25,7 +25,7 @@ namespace Agent
         {
             Sender.host = host;
             Sender.name = name;
-            url = @"http://" + Sender.host + @"/api/set/";
+            baseUrl = @"http://" + Sender.host + @"/SampleApi/api/performances/set/";
         }
 
         public static void Send()
@@ -41,7 +41,7 @@ namespace Agent
             //url += Convert.ToBase64String(param);
             //Console.WriteLine(url);
             //var response = new HttpClient().GetAsync(url);
-            url += "?name=" + name + "&cpu=" + cpu + "&memory=" + mem;
+            var url = baseUrl + "?name=" + name + "&cpu=" + cpu + "&memory=" + mem;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             request.KeepAlive = false;
             request.Proxy = null;
@@ -51,11 +51,12 @@ namespace Agent
                 using (var response = (HttpWebResponse) request.GetResponse())
                 {
                     var code = response.StatusCode;
-                    if (code != HttpStatusCode.OK)
+                    WriteComment(" cpu= " + cpu + " memory= " + mem + " " + code);
+                    WriteLog(" cpu= " + cpu + " memory= " + mem + " " + code);
+                    /*if (code != HttpStatusCode.OK)
                     {
-                        WriteComment(code);
-                        WriteLog(code);
-                    }
+                        
+                    }*/
                 }
                     
                 

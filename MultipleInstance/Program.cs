@@ -15,7 +15,7 @@ namespace MultipleInstance
 
 
         private static int n = 10;
-        private static string host = "192.168.1.8";
+        private static string host = "192.168.1.1";
         private static bool isLogEnabled = true;
 
         private static AppDomain[] domains;
@@ -26,7 +26,7 @@ namespace MultipleInstance
         [LoaderOptimization(LoaderOptimization.MultiDomainHost)]
         static void Main(string[] args)
         {
-            if(Init(args));
+            if (Init(args))
             {
                 threads = new Thread[n];
                 domains = new AppDomain[n];
@@ -45,7 +45,7 @@ namespace MultipleInstance
                     threads[i].Start(domains[i]);
                 }
 
-               
+
                 while (Console.ReadKey(true).Key != ConsoleKey.X)
                 {
 
@@ -60,7 +60,7 @@ namespace MultipleInstance
 
         static void StartAgent(object domain)
         {
-            var result =  Regex.Match(((AppDomain)domain).FriendlyName, @"\d+").Value;
+            var result = Regex.Match(((AppDomain)domain).FriendlyName, @"\d+").Value;
             var t = Int32.Parse(result);
             var a = names[t];
             if (isLogEnabled)
@@ -132,8 +132,7 @@ namespace MultipleInstance
                 }
 
                 byte tempForParsing;
-                if (values.Length == 2)
-                    return subvalues.All(r => byte.TryParse(r, out tempForParsing));
+                return subvalues.All(r => byte.TryParse(r, out tempForParsing));
             }
             return false;
 
