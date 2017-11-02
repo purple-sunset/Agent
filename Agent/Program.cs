@@ -22,19 +22,21 @@ namespace Agent
         {
             if (Init(args))
             {
-                Timer timer = new Timer(Send, null, 1000, 40);
+                Timer pTimer = new Timer(GetPerformance, null, 500, 500);
+                Timer sTimer = new Timer(Send, null, 1000, 32);
 
                 while (Console.ReadKey(true).Key != ConsoleKey.Q)
                 {
 
                 }
 
-                timer.Dispose();
+                sTimer.Dispose();
+                pTimer.Dispose();
                 if (isLogEnabled)
                     Logger.EndLogging();
                 Console.WriteLine("Exitting");
             }
-            
+
         }
 
         public static bool IsCommentEnabled
@@ -114,7 +116,7 @@ namespace Agent
                 if (n > 2)
                 {
                     return false;
-                } 
+                }
                 else if (n > 0)
                 {
                     var subvalues = values[0].Split('.');
@@ -138,10 +140,14 @@ namespace Agent
             return true;
         }
 
-    static void Send(object sender)
+        static void Send(object sender)
         {
             Sender.Send();
         }
-        
+
+        static void GetPerformance(object data)
+        {
+            SysPerfomance.GetPerformance();
+        }
     }
 }
