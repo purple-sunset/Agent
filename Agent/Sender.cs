@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -89,8 +90,9 @@ namespace Agent
             }
         }
 
-        public void CloseLog()
+        public void CloseLog(int delay)
         {
+            Thread.Sleep(delay);
             logger.EndLogging();
         }
     }

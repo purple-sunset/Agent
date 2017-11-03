@@ -19,7 +19,7 @@ namespace Agent
         public static bool isCommentEnabled = true;
         public static bool isLogEnabled = true;
         public static bool isCheckEnabled = true;
-        private static int n = 10;
+        private static int n = 1;
 
         private static Thread[] threads;
         private static Timer[] timers;
@@ -55,15 +55,16 @@ namespace Agent
 
                 }
 
+                Console.WriteLine("Exitting");
+
                 for (int i = 0; i < n; i++)
                 {
-                    threads[i].Join(500);
                     timers[i].Dispose();
-                    senders[i].CloseLog();
-
+                    senders[i].CloseLog(100);
+                    threads[i].Join();
                 }
 
-                Console.WriteLine("Exitting");
+                
             }
 
         }
