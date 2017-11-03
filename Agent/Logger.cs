@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Agent
 {
     class Logger
     {
-        private string fileLocation = "";
-        private FileStream fs;
-        private StreamWriter str;
+        private readonly string fileLocation = "";
+        private readonly FileStream fs;
+        private readonly StreamWriter str;
 
         public Logger(string fileName)
         {
@@ -23,12 +19,8 @@ namespace Agent
 
         public void Write(string message)
         {
-            
             str.WriteLine(DateTime.Now + " " + message);
             str.Flush();
-            
-            
-
         }
 
         public void EndLogging()

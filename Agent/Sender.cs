@@ -1,14 +1,7 @@
 ﻿using System;
-using System.CodeDom;
-using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Net;
-using System.Net.Http;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Web;
 
 namespace Agent
 {
@@ -17,21 +10,50 @@ namespace Agent
         public static string host = "";
         public static string baseUrl = "";
 
-        private string name = "";
+        private static readonly char[] charsToTrim = {'"', '\\'};
 
         private int cpu;
         private int mem;
-        private int n = 0;
+        private int n;
+        private string name = "";
 
-        private SysPerfomance sPerf;
         private Logger logger;
+        private SysPerfomance sPerf;
 
-        public Sender(string name)
+
+        public bool GetName()
         {
-            this.name = name;
-            sPerf = new SysPerfomance();
-            logger = new Logger(name);
-            
+            var request = (HttpWebRequest) WebRequest.Create(baseUrl + "getname");
+            request.KeepAlive = false;
+            request.Proxy = null;
+            try
+            {
+                using (var response = (HttpWebResponse) request.GetResponse())
+                {
+                    var code = response.StatusCode;
+                    if (code == HttpStatusCode.OK)
+                        using (var stream = response.GetResponseStream())
+                        using (var reader = new StreamReader(stream))
+                        {
+                            var tname = reader.ReadToEnd().Trim(charsToTrim);
+                            if (tname.Length > 0)
+                            {
+                                name = tname;
+                                sPerf = new SysPerfomance();
+                                if (Program.isLogEnabled)
+                                    logger = new Logger(name);
+                                return true;
+                            }
+                        }
+                }
+            }
+            catch (Exception e)
+            {
+                WriteComment(e.Message);
+                WriteLog(e.Message);
+            }
+
+            return false;
         }
 
         public void Send()
@@ -42,13 +64,13 @@ namespace Agent
                 sPerf.GetPerformance(out cpu, out mem);
                 n = 0;
             }
-            
+
             //var param = Encoding.UTF8.GetBytes("?name=" + name + "&cpu=" + cpu + "&memory=" + mem);
             //url += Convert.ToBase64String(param);
             //Console.WriteLine(url);
             //var response = new HttpClient().GetAsync(url);
-            var url = baseUrl + "?name=" + name + "&cpu=" + cpu + "&memory=" + mem;
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            var url = baseUrl + "set/?name=" + name + "&cpu=" + cpu + "&memory=" + mem;
+            var request = (HttpWebRequest) WebRequest.Create(url);
             request.KeepAlive = false;
             request.Proxy = null;
 
@@ -59,13 +81,8 @@ namespace Agent
                     var code = response.StatusCode;
                     WriteComment(" cpu= " + cpu + " memory= " + mem + " " + code);
                     WriteLog(" cpu= " + cpu + " memory= " + mem + " " + code);
-                    /*if (code != HttpStatusCode.OK)
-                    {
-                        
-                    }*/
-                }
                     
-                
+                }
             }
             catch (Exception e)
             {
@@ -74,26 +91,25 @@ namespace Agent
             }
         }
 
-        void WriteComment(object code)
+        private void WriteComment(object code)
         {
             if (Program.IsCommentEnabled)
-            {
                 Console.WriteLine(DateTime.Now + " " + code);
-            }
         }
 
-        void WriteLog(object code)
+        private void WriteLog(object code)
         {
             if (Program.IsLogEnabled)
-            {
                 logger.Write(code.ToString());
-            }
         }
 
         public void CloseLog(int delay)
         {
-            Thread.Sleep(delay);
-            logger.EndLogging();
+            if (Program.isLogEnabled)
+            {
+                Thread.Sleep(delay);
+                logger?.EndLogging();
+            }
         }
     }
 }
