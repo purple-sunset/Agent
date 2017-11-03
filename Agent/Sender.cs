@@ -13,27 +13,32 @@ namespace Agent
 {
     class Sender
     {
-        private static string host = "";
-        private static string name = "";
-        private static string baseUrl = "";
+        public static string host = "";
+        public static string baseUrl = "";
 
-        private static int cpu;
-        private static int mem;
-        private static int n = 0;
+        private string name = "";
 
-        public static void Init(string host, string name)
+        private int cpu;
+        private int mem;
+        private int n = 0;
+
+        private SysPerfomance sPerf;
+        private Logger logger;
+
+        public Sender(string name)
         {
-            Sender.host = host;
-            Sender.name = name;
-            baseUrl = @"http://" + Sender.host + @"/SampleApi/api/performances/set/";
+            this.name = name;
+            sPerf = new SysPerfomance();
+            logger = new Logger(name);
+            
         }
 
-        public static void Send()
+        public void Send()
         {
             n++;
             if (n == 10)
             {
-                SysPerfomance.GetPerformance(out cpu, out mem);
+                sPerf.GetPerformance(out cpu, out mem);
                 n = 0;
             }
             
@@ -68,7 +73,7 @@ namespace Agent
             }
         }
 
-        static void WriteComment(object code)
+        void WriteComment(object code)
         {
             if (Program.IsCommentEnabled)
             {
@@ -76,12 +81,17 @@ namespace Agent
             }
         }
 
-        static void WriteLog(object code)
+        void WriteLog(object code)
         {
             if (Program.IsLogEnabled)
             {
-                Logger.Write(code.ToString());
+                logger.Write(code.ToString());
             }
+        }
+
+        public void CloseLog()
+        {
+            logger.EndLogging();
         }
     }
 }

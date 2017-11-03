@@ -12,13 +12,13 @@ namespace Agent
 {
     class SysPerfomance
     {
-        private static PerformanceCounter cpuCounter = new PerformanceCounter("Processor Information", "% Processor Time", "_Total");
-        private static PerformanceCounter memCounter = new PerformanceCounter("Memory", "% Committed Bytes In Use");
+        private PerformanceCounter cpuCounter = new PerformanceCounter("Processor Information", "% Processor Time", "_Total");
+        private PerformanceCounter memCounter = new PerformanceCounter("Memory", "% Committed Bytes In Use");
         //private static int coreCount = Environment.ProcessorCount;
         //private static ManagementObjectSearcher searcher = new ManagementObjectSearcher("select PercentProcessorTime from Win32_PerfFormattedData_PerfOS_Processor where Name=\"_Total\"");
         
 
-        public static void GetPerformance(out int cpu, out int mem)
+        public void GetPerformance(out int cpu, out int mem)
         {
             cpu = (int) cpuCounter.NextValue();
             mem = (int) memCounter.NextValue();

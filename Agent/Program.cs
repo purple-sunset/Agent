@@ -14,27 +14,58 @@ namespace Agent
 {
     class Program
     {
+        private static string host = "192.168.1.1";
+        private static string name = "Server";
         public static bool isCommentEnabled = true;
         public static bool isLogEnabled = true;
         public static bool isCheckEnabled = true;
+        private static int n = 10;
+
+        private static Thread[] threads;
+        private static Timer[] timers;
+        private static Sender[] senders;
+        private static Random random = new Random();
+        private static List<string> names;
 
         static void Main(string[] args)
         {
             if (Init(args))
             {
-                Timer timer = new Timer(Send, null, 1000, 32);
+                threads = new Thread[n];
+                timers = new Timer[n];
+                senders = new Sender[n];
+                names = new List<string>(n);
+
+                for (int i = 0; i < n; i++)
+                {
+                    while (names.Contains(name))
+                    {
+                        name = CreateName(5);
+                    }
+                    names.Add(name);
+
+                    threads[i] = new Thread(RunMultiple);
+                    threads[i].Start(i);
+                }
+
+                //names = null;
 
                 while (Console.ReadKey(true).Key != ConsoleKey.Q)
                 {
 
                 }
 
-                timer.Dispose();
-                if (isLogEnabled)
-                    Logger.EndLogging();
+                for (int i = 0; i < n; i++)
+                {
+                    threads[i].Join(500);
+                    timers[i].Dispose();
+                    senders[i].CloseLog();
+
+                }
+
                 Console.WriteLine("Exitting");
             }
-            
+
         }
 
         public static bool IsCommentEnabled
@@ -51,10 +82,11 @@ namespace Agent
 
         static bool Init(string[] paramStrings)
         {
-            string host = "192.168.1.1";
-            string name = "Server";
+
             for (int i = 0; i < paramStrings.Length; i++)
             {
+                if (paramStrings[i] == "/n")
+                    n = Convert.ToInt32(paramStrings[i + 1]);
                 if (paramStrings[i] == "/host")
                 {
                     if (ParseHost(paramStrings[i + 1]))
@@ -84,16 +116,33 @@ namespace Agent
 
             }
 
-            Sender.Init(host, name);
-            if (isLogEnabled)
-                Logger.Init(name);
-            if (IsCommentEnabled)
-            {
-                Console.WriteLine("Sending data to " + host);
-                Console.WriteLine("Press Q to quit");
-            }
+            Sender.host = host;
+            Sender.baseUrl = @"http://" + Sender.host + @"/SampleApi/api/performances/set/";
+            Console.WriteLine("Running " + n + " agents to " + host);
+            Console.WriteLine("Press Q to quit");
             return true;
 
+        }
+
+        static void RunMultiple(object data)
+        {
+            var i = (int)data;
+            senders[i] = new Sender(names[i]);
+            timers[i] = new Timer(Send, senders[i], 1000, 32);
+        }
+
+        static void Send(object data)
+        {
+            ((Sender)data).Send();
+        }
+
+
+
+        static string CreateName(int length)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
         static bool ParseName(string s)
@@ -114,7 +163,7 @@ namespace Agent
                 if (n > 2)
                 {
                     return false;
-                } 
+                }
                 else if (n > 0)
                 {
                     var subvalues = values[0].Split('.');
@@ -138,10 +187,5 @@ namespace Agent
             return true;
         }
 
-    static void Send(object sender)
-        {
-            Sender.Send();
-        }
-        
     }
 }
