@@ -14,7 +14,7 @@ namespace Agent
 {
     class Program
     {
-        public static bool isCommentEnabled = true;
+        public static bool isCommentEnabled = false;
         public static bool isLogEnabled = true;
         public static bool isCheckEnabled = true;
 
@@ -28,31 +28,21 @@ namespace Agent
                 {
 
                 }
-
+                Console.WriteLine("Exitting");
                 timer.Dispose();
                 if (isLogEnabled)
+                {
+                    Thread.Sleep(100);
                     Logger.EndLogging();
-                Console.WriteLine("Exitting");
+                }
             }
-            
-        }
 
-        public static bool IsCommentEnabled
-        {
-            get => isCommentEnabled;
-            set => isCommentEnabled = value;
         }
-
-        public static bool IsLogEnabled
-        {
-            get => isLogEnabled;
-            set => isLogEnabled = value;
-        }
+        
 
         static bool Init(string[] paramStrings)
         {
-            string host = "192.168.1.1";
-            string name = "Server";
+            string host = "192.168.1.8";
             for (int i = 0; i < paramStrings.Length; i++)
             {
                 if (paramStrings[i] == "/host")
@@ -65,44 +55,23 @@ namespace Agent
                         return false;
                     }
                 }
-                if (paramStrings[i] == "/name")
-                {
-                    if (ParseName(paramStrings[i + 1]))
-                        name = paramStrings[i + 1];
-                    else
-                    {
-                        Console.WriteLine("Cannot verify name");
-                        return false;
-                    }
-                }
-                if (paramStrings[i] == "/nolog")
-                    isLogEnabled = false;
-                if (paramStrings[i] == "/nocomment")
-                    isCommentEnabled = false;
+                if (paramStrings[i] == "/log")
+                    isLogEnabled = true;
+                if (paramStrings[i] == "/comment")
+                    isCommentEnabled = true;
                 if (paramStrings[i] == "/nocheck")
                     isCheckEnabled = false;
 
             }
 
-            Sender.Init(host, name);
-            if (isLogEnabled)
-                Logger.Init(name);
-            if (IsCommentEnabled)
+            if (isCommentEnabled)
             {
-                Console.WriteLine("Sending data to " + host);
+                Console.WriteLine("Init agent to " + host);
                 Console.WriteLine("Press Q to quit");
             }
-            return true;
 
-        }
+            return Sender.Init(host);
 
-        static bool ParseName(string s)
-        {
-            if (isCheckEnabled)
-            {
-                return Regex.IsMatch(s, @"^[\w]{1,10}$");
-            }
-            return true;
         }
 
         static bool ParseHost(string s)
@@ -114,7 +83,7 @@ namespace Agent
                 if (n > 2)
                 {
                     return false;
-                } 
+                }
                 else if (n > 0)
                 {
                     var subvalues = values[0].Split('.');
@@ -138,10 +107,10 @@ namespace Agent
             return true;
         }
 
-    static void Send(object sender)
+        static void Send(object sender)
         {
-            Sender.Send();
+            Sender.Send2();
         }
-        
+
     }
 }

@@ -12,16 +12,12 @@ namespace MultipleInstance
 {
     class Program
     {
-
-
         private static int n = 10;
-        private static string host = "192.168.1.1";
-        private static bool isLogEnabled = true;
+        private static string host = "192.168.1.8";
 
+        private static string[] outParam = new string[4];
         private static AppDomain[] domains;
         private static Thread[] threads;
-        private static Random random = new Random();
-        private static List<string> names;
 
         [LoaderOptimization(LoaderOptimization.MultiDomainHost)]
         static void Main(string[] args)
@@ -30,22 +26,12 @@ namespace MultipleInstance
             {
                 threads = new Thread[n];
                 domains = new AppDomain[n];
-                names = new List<string>(n);
-                string name = "";
-
                 for (int i = 0; i < n; i++)
                 {
-                    do
-                    {
-                        name = CreateName(5);
-                    } while (names.Contains(name));
-                    names.Add(name);
                     domains[i] = AppDomain.CreateDomain("Agent " + i);
                     threads[i] = new Thread(StartAgent);
                     threads[i].Start(domains[i]);
                 }
-
-
                 while (Console.ReadKey(true).Key != ConsoleKey.X)
                 {
 
@@ -60,25 +46,9 @@ namespace MultipleInstance
 
         static void StartAgent(object domain)
         {
-            var result = Regex.Match(((AppDomain)domain).FriendlyName, @"\d+").Value;
-            var t = Int32.Parse(result);
-            var a = names[t];
-            if (isLogEnabled)
-                ((AppDomain)domain).ExecuteAssembly("Agent.exe", new[] { "/nocomment", "/nocheck", "/host", host, "/name", a });
-            else
-            {
-                ((AppDomain)domain).ExecuteAssembly("Agent.exe", new[] { "/nocomment", "/nolog", "/nocheck", "/host", host, "/name", a });
-            }
+            ((AppDomain)domain).ExecuteAssembly("Agent.exe", outParam);
         }
 
-
-
-        static string CreateName(int length)
-        {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            return new string(Enumerable.Repeat(chars, length)
-                .Select(s => s[random.Next(s.Length)]).ToArray());
-        }
 
         static bool Init(string[] paramStrings)
         {
@@ -97,11 +67,14 @@ namespace MultipleInstance
                     }
                 }
 
-                if (paramStrings[i] == "/nolog")
-                    isLogEnabled = false;
+                if (paramStrings[i] == "/log")
+                    outParam[3] = "/log";
 
             }
 
+            outParam[0] = "/host";
+            outParam[1] = host;
+            outParam[2] = "/nocheck";
             Console.WriteLine("Running " + n + " agents to " + host);
             return true;
         }

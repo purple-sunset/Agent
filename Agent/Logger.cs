@@ -23,12 +23,8 @@ namespace Agent
 
         public static void Write(string message)
         {
-            
             str.WriteLine(DateTime.Now + " " + message);
             str.Flush();
-            
-            
-
         }
 
         public static void EndLogging()

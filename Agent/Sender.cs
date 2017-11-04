@@ -15,40 +15,53 @@ namespace Agent
     {
         private static string host = "";
         private static string name = "";
-        private static string baseUrl = "";
+        public static string baseUrl = "";
 
+        private static readonly char[] charsToTrim = { '"', '\\' };
+        private static HttpClient client = new HttpClient();
         private static int cpu;
         private static int mem;
-        private static int n = 0;
 
-        public static void Init(string host, string name)
+        public static bool Init(string host)
         {
             Sender.host = host;
-            Sender.name = name;
-            baseUrl = @"http://" + Sender.host + @"/SampleApi/api/performances/set/";
+            Sender.baseUrl = @"http://" + Sender.host + @"/SampleApi/api/performances/";
+            Sender.GetName();
+            if (name.Length > 0)
+            {
+                
+                if (Program.isLogEnabled)
+                    Logger.Init(name);
+                if(Program.isCommentEnabled)
+                    Console.WriteLine("Error getting name");
+                return true;
+            }
+                
+            return false;
+        }
+
+        public static void GetName()
+        {
+            var response = client.GetAsync(baseUrl + "getname").Result;
+            if (response.IsSuccessStatusCode)
+            {
+                var tname = response.Content.ReadAsStringAsync().Result;
+                name = tname.Trim(charsToTrim);
+            }
+            
         }
 
         public static void Send()
         {
-            n++;
-            if (n == 10)
-            {
-                SysPerfomance.GetPerformance(out cpu, out mem);
-                n = 0;
-            }
-            
-            //var param = Encoding.UTF8.GetBytes("?name=" + name + "&cpu=" + cpu + "&memory=" + mem);
-            //url += Convert.ToBase64String(param);
-            //Console.WriteLine(url);
-            //var response = new HttpClient().GetAsync(url);
-            var url = baseUrl + "?name=" + name + "&cpu=" + cpu + "&memory=" + mem;
+            SysPerfomance.GetPerformance(out cpu, out mem);
+            var url = baseUrl + "set/?name=" + name + "&cpu=" + cpu + "&memory=" + mem;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             request.KeepAlive = false;
             request.Proxy = null;
 
             try
             {
-                using (var response = (HttpWebResponse) request.GetResponse())
+                using (var response = (HttpWebResponse)request.GetResponse())
                 {
                     var code = response.StatusCode;
                     WriteComment(" cpu= " + cpu + " memory= " + mem + " " + code);
@@ -58,8 +71,8 @@ namespace Agent
                         
                     }*/
                 }
-                    
-                
+
+
             }
             catch (Exception e)
             {
@@ -68,9 +81,22 @@ namespace Agent
             }
         }
 
+        public static void Send2()
+        {
+            SysPerfomance.GetPerformance(out cpu, out mem);
+            var url = baseUrl + "set/?name=" + name + "&cpu=" + cpu + "&memory=" + mem;
+            var response = client.GetAsync(url).Result;
+            if (response.IsSuccessStatusCode)
+            {
+                WriteComment(" cpu= " + cpu + " memory= " + mem + " " + response.StatusCode);
+                WriteLog(" cpu= " + cpu + " memory= " + mem + " " + response.StatusCode);
+            }
+
+        }
+
         static void WriteComment(object code)
         {
-            if (Program.IsCommentEnabled)
+            if (Program.isCommentEnabled)
             {
                 Console.WriteLine(DateTime.Now + " " + code);
             }
@@ -78,7 +104,7 @@ namespace Agent
 
         static void WriteLog(object code)
         {
-            if (Program.IsLogEnabled)
+            if (Program.isLogEnabled)
             {
                 Logger.Write(code.ToString());
             }
