@@ -64,7 +64,7 @@ namespace Agent
             var i = (int) data;
             senders[i] = new Sender();
             if (senders[i].GetName())
-                timers[i] = new Timer(Send, senders[i], 1000, 30);
+                timers[i] = new Timer(Send, senders[i], 1000, 40);
         }
 
         private static void Send(object data)
