@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -15,20 +16,26 @@ namespace Agent
     class Program
     {
         public static bool isCommentEnabled = false;
-        public static bool isLogEnabled = true;
+        public static bool isLogEnabled = false;
         public static bool isCheckEnabled = true;
 
         static void Main(string[] args)
         {
+            ServicePointManager.DefaultConnectionLimit = 100000;
+            ServicePointManager.Expect100Continue = false;
+            ServicePointManager.SetTcpKeepAlive(true, 10000, 1000);
+            ServicePointManager.UseNagleAlgorithm = false;
             if (Init(args))
             {
-                Timer timer = new Timer(Send, null, 1000, 32);
+                Timer timer2=new Timer(GetPerformance, null, 500, 100);
+                Timer timer = new Timer(Send, null, 1000, 30);
 
                 while (Console.ReadKey(true).Key != ConsoleKey.Q)
                 {
 
                 }
                 Console.WriteLine("Exitting");
+                timer2.Dispose();
                 timer.Dispose();
                 if (isLogEnabled)
                 {
@@ -109,7 +116,12 @@ namespace Agent
 
         static void Send(object sender)
         {
-            Sender.Send2();
+            Sender.Send();
+        }
+
+        static void GetPerformance(object sender)
+        {
+            SysPerfomance.GetPerformance();
         }
 
     }

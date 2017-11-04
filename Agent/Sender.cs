@@ -1,6 +1,7 @@
 ﻿using System;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -18,9 +19,9 @@ namespace Agent
         public static string baseUrl = "";
 
         private static readonly char[] charsToTrim = { '"', '\\' };
-        private static HttpClient client = new HttpClient();
-        private static int cpu;
-        private static int mem;
+        //private static HttpClient client = new HttpClient();
+        //private static int cpu;
+        //private static int mem;
 
         public static bool Init(string host)
         {
@@ -29,43 +30,57 @@ namespace Agent
             Sender.GetName();
             if (name.Length > 0)
             {
-                
                 if (Program.isLogEnabled)
                     Logger.Init(name);
                 if(Program.isCommentEnabled)
-                    Console.WriteLine("Error getting name");
+                    Console.WriteLine("Getting name done");
                 return true;
             }
-                
+            if (Program.isCommentEnabled)
+                Console.WriteLine("Error getting name done");
             return false;
         }
 
         public static void GetName()
         {
-            var response = client.GetAsync(baseUrl + "getname").Result;
-            if (response.IsSuccessStatusCode)
+            var request = (HttpWebRequest)WebRequest.Create(baseUrl + "getname");
+            request.KeepAlive = true;
+            request.Proxy = null;
+            try
             {
-                var tname = response.Content.ReadAsStringAsync().Result;
-                name = tname.Trim(charsToTrim);
+                using (var response = (HttpWebResponse)request.GetResponse())
+                {
+                    var code = response.StatusCode;
+                    if (code == HttpStatusCode.OK)
+                        using (var stream = response.GetResponseStream())
+                        using (var reader = new StreamReader(stream))
+                        {
+                            name = reader.ReadToEnd().Trim(charsToTrim);
+                        }
+                }
+            }
+            catch (Exception e)
+            {
+                
             }
             
         }
 
         public static void Send()
         {
-            SysPerfomance.GetPerformance(out cpu, out mem);
-            var url = baseUrl + "set/?name=" + name + "&cpu=" + cpu + "&memory=" + mem;
+            //SysPerfomance.GetPerformance(out cpu, out mem);
+            var url = baseUrl + "set/?name=" + name + "&cpu=" + SysPerfomance.cpu + "&memory=" + SysPerfomance.mem;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            request.KeepAlive = false;
-            request.Proxy = null;
+            //request.KeepAlive = true;
+            //request.Proxy = null;
 
             try
             {
                 using (var response = (HttpWebResponse)request.GetResponse())
                 {
                     var code = response.StatusCode;
-                    WriteComment(" cpu= " + cpu + " memory= " + mem + " " + code);
-                    WriteLog(" cpu= " + cpu + " memory= " + mem + " " + code);
+                    WriteComment(" cpu= " + SysPerfomance.cpu + " memory= " + SysPerfomance.mem + " " + code);
+                    WriteLog(" cpu= " + SysPerfomance.cpu + " memory= " + SysPerfomance.mem + " " + code);
                     /*if (code != HttpStatusCode.OK)
                     {
                         
@@ -80,20 +95,7 @@ namespace Agent
                 WriteLog(e.Message);
             }
         }
-
-        public static void Send2()
-        {
-            SysPerfomance.GetPerformance(out cpu, out mem);
-            var url = baseUrl + "set/?name=" + name + "&cpu=" + cpu + "&memory=" + mem;
-            var response = client.GetAsync(url).Result;
-            if (response.IsSuccessStatusCode)
-            {
-                WriteComment(" cpu= " + cpu + " memory= " + mem + " " + response.StatusCode);
-                WriteLog(" cpu= " + cpu + " memory= " + mem + " " + response.StatusCode);
-            }
-
-        }
-
+        
         static void WriteComment(object code)
         {
             if (Program.isCommentEnabled)
