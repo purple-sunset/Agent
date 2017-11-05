@@ -27,16 +27,17 @@ namespace Agent
             ServicePointManager.UseNagleAlgorithm = false;
             if (Init(args))
             {
-                Timer timer2=new Timer(GetPerformance, null, 500, 100);
-                Timer timer = new Timer(Send, null, 1000, 30);
+                Timer timer2 = new Timer(GetPer, null, 100, 40);
+                Timer timer = new Timer(Send, null, 200, 40);
 
                 while (Console.ReadKey(true).Key != ConsoleKey.Q)
                 {
 
                 }
                 Console.WriteLine("Exitting");
-                timer2.Dispose();
+                
                 timer.Dispose();
+                timer2.Dispose();
                 if (isLogEnabled)
                 {
                     Thread.Sleep(100);
@@ -50,6 +51,7 @@ namespace Agent
         static bool Init(string[] paramStrings)
         {
             string host = "192.168.1.8";
+            string name = "domain.com";
             for (int i = 0; i < paramStrings.Length; i++)
             {
                 if (paramStrings[i] == "/host")
@@ -61,6 +63,10 @@ namespace Agent
                         Console.WriteLine("Cannot verify host");
                         return false;
                     }
+                }
+                if (paramStrings[i] == "/name")
+                {
+                    name = paramStrings[i + 1];
                 }
                 if (paramStrings[i] == "/log")
                     isLogEnabled = true;
@@ -76,8 +82,10 @@ namespace Agent
                 Console.WriteLine("Init agent to " + host);
                 Console.WriteLine("Press Q to quit");
             }
-
-            return Sender.Init(host);
+            if(isLogEnabled)
+                Logger.Init(name);
+            Sender.Init(host, name);
+            return true;
 
         }
 
@@ -119,10 +127,9 @@ namespace Agent
             Sender.Send();
         }
 
-        static void GetPerformance(object sender)
+        static void GetPer(object sender)
         {
-            SysPerfomance.GetPerformance();
+            SysPerfomance.GetPerformance(out Sender.cpu, out Sender.mem);
         }
-
     }
 }

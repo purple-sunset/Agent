@@ -12,7 +12,6 @@ namespace Agent
         private static string fileLocation = "";
         private static FileStream fs;
         private static StreamWriter str;
-        
 
         public static void Init(string fileName)
         {

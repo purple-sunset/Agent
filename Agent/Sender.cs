@@ -18,69 +18,34 @@ namespace Agent
         private static string name = "";
         public static string baseUrl = "";
 
-        private static readonly char[] charsToTrim = { '"', '\\' };
+        
         //private static HttpClient client = new HttpClient();
-        //private static int cpu;
-        //private static int mem;
+        public static int cpu;
+        public static int mem;
 
-        public static bool Init(string host)
+        public static void Init(string host, string name)
         {
             Sender.host = host;
-            Sender.baseUrl = @"http://" + Sender.host + @"/SampleApi/api/performances/";
-            Sender.GetName();
-            if (name.Length > 0)
-            {
-                if (Program.isLogEnabled)
-                    Logger.Init(name);
-                if(Program.isCommentEnabled)
-                    Console.WriteLine("Getting name done");
-                return true;
-            }
-            if (Program.isCommentEnabled)
-                Console.WriteLine("Error getting name done");
-            return false;
+            Sender.name = name;
+            Sender.baseUrl = @"http://" + Sender.host + @"/SampleApi/api/performances/set/";
         }
-
-        public static void GetName()
-        {
-            var request = (HttpWebRequest)WebRequest.Create(baseUrl + "getname");
-            request.KeepAlive = true;
-            request.Proxy = null;
-            try
-            {
-                using (var response = (HttpWebResponse)request.GetResponse())
-                {
-                    var code = response.StatusCode;
-                    if (code == HttpStatusCode.OK)
-                        using (var stream = response.GetResponseStream())
-                        using (var reader = new StreamReader(stream))
-                        {
-                            name = reader.ReadToEnd().Trim(charsToTrim);
-                        }
-                }
-            }
-            catch (Exception e)
-            {
-                
-            }
-            
-        }
+        
 
         public static void Send()
         {
-            //SysPerfomance.GetPerformance(out cpu, out mem);
-            var url = baseUrl + "set/?name=" + name + "&cpu=" + SysPerfomance.cpu + "&memory=" + SysPerfomance.mem;
+            
+            var url = baseUrl + "?name=" + name + "&cpu=" + cpu + "&memory=" + mem;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            //request.KeepAlive = true;
-            //request.Proxy = null;
+            request.KeepAlive = true;
+            request.Proxy = null;
 
             try
             {
                 using (var response = (HttpWebResponse)request.GetResponse())
                 {
                     var code = response.StatusCode;
-                    WriteComment(" cpu= " + SysPerfomance.cpu + " memory= " + SysPerfomance.mem + " " + code);
-                    WriteLog(" cpu= " + SysPerfomance.cpu + " memory= " + SysPerfomance.mem + " " + code);
+                    WriteComment(" cpu= " + cpu + " memory= " + mem + " " + code);
+                    WriteLog(" cpu= " + cpu + " memory= " + mem + " " + code);
                     /*if (code != HttpStatusCode.OK)
                     {
                         

@@ -13,9 +13,10 @@ namespace MultipleInstance
     class Program
     {
         private static int n = 10;
+        private static int startNumber = 1;
         private static string host = "192.168.1.8";
 
-        private static string[] outParam = new string[4];
+        private static string[] outParam = new string[6];
         private static AppDomain[] domains;
         private static Thread[] threads;
 
@@ -46,6 +47,12 @@ namespace MultipleInstance
 
         static void StartAgent(object domain)
         {
+            lock (outParam)
+            {
+                outParam[3] = "domain" + startNumber + ".com";
+                
+                startNumber++;
+            }
             ((AppDomain)domain).ExecuteAssembly("Agent.exe", outParam);
         }
 
@@ -56,6 +63,8 @@ namespace MultipleInstance
             {
                 if (paramStrings[i] == "/n")
                     n = Convert.ToInt32(paramStrings[i + 1]);
+                if (paramStrings[i] == "/s")
+                    startNumber = Convert.ToInt32(paramStrings[i + 1]);
                 if (paramStrings[i] == "/host")
                 {
                     if (ParseHost(paramStrings[i + 1]))
@@ -68,13 +77,14 @@ namespace MultipleInstance
                 }
 
                 if (paramStrings[i] == "/log")
-                    outParam[3] = "/log";
+                    outParam[5] = "/log";
 
             }
 
             outParam[0] = "/host";
             outParam[1] = host;
-            outParam[2] = "/nocheck";
+            outParam[2] = "/name";
+            outParam[4] = "/nocheck";
             Console.WriteLine("Running " + n + " agents to " + host);
             return true;
         }
