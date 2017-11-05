@@ -15,9 +15,17 @@ namespace Agent
 {
     class Program
     {
+        private static int n = 10;
+        private static int startNumber = 1;
+
         public static bool isCommentEnabled = false;
         public static bool isLogEnabled = false;
         public static bool isCheckEnabled = true;
+
+        private static Thread[] threads;
+        private static Timer[] timers;
+        private static Sender[] senders;
+        private static string[] names;
 
         static void Main(string[] args)
         {
@@ -27,33 +35,52 @@ namespace Agent
             ServicePointManager.UseNagleAlgorithm = false;
             if (Init(args))
             {
-                Timer timer2 = new Timer(GetPer, null, 100, 40);
-                Timer timer = new Timer(Send, null, 200, 40);
+                int due = 10;
+                if (n < 20)
+                    due = 41 - n;
+
+                Timer timer = new Timer(GetPer, null, 100, due);
+
+                threads = new Thread[n];
+                timers = new Timer[n];
+                senders = new Sender[n];
+                for (int i = 0; i < n; i++)
+                {
+                    threads[i] = new Thread(RunMultiple);
+                    threads[i].Start(i);
+                }
+
+
 
                 while (Console.ReadKey(true).Key != ConsoleKey.Q)
                 {
 
                 }
                 Console.WriteLine("Exitting");
-                
+
                 timer.Dispose();
-                timer2.Dispose();
-                if (isLogEnabled)
+                for (var i = 0; i < n; i++)
                 {
-                    Thread.Sleep(100);
-                    Logger.EndLogging();
+                    timers[i]?.Dispose();
+                    senders[i].CloseLog(100);
+                    threads[i].Join();
                 }
+
             }
 
         }
-        
+
 
         static bool Init(string[] paramStrings)
         {
-            string host = "192.168.1.8";
-            string name = "domain.com";
+            string host = "192.168.1.1:8080";
+            string name = "domain1.com";
             for (int i = 0; i < paramStrings.Length; i++)
             {
+                if (paramStrings[i] == "/n")
+                    n = Convert.ToInt32(paramStrings[i + 1]);
+                if (paramStrings[i] == "/s")
+                    startNumber = Convert.ToInt32(paramStrings[i + 1]);
                 if (paramStrings[i] == "/host")
                 {
                     if (ParseHost(paramStrings[i + 1]))
@@ -77,14 +104,18 @@ namespace Agent
 
             }
 
-            if (isCommentEnabled)
+
+            Console.WriteLine("Init " + n + " agent to " + host);
+            Console.WriteLine("Press Q to quit");
+
+            names = new string[n];
+            names[0] = name;
+            for (int i = 1; i < n; i++)
             {
-                Console.WriteLine("Init agent to " + host);
-                Console.WriteLine("Press Q to quit");
+                names[i] = "domain" + (startNumber + i) + ".com";
             }
-            if(isLogEnabled)
-                Logger.Init(name);
-            Sender.Init(host, name);
+            
+            Sender.baseUrl = @"http://" + host + @"/api/v1";
             return true;
 
         }
@@ -122,14 +153,22 @@ namespace Agent
             return true;
         }
 
-        static void Send(object sender)
+
+        private static void RunMultiple(object data)
         {
-            Sender.Send();
+            var i = (int)data;
+            senders[i] = new Sender(names[i]);
+            timers[i] = new Timer(Send, senders[i], 1000, 30);
+        }
+
+        private static void Send(object data)
+        {
+            ((Sender)data).Send();
         }
 
         static void GetPer(object sender)
         {
-            SysPerfomance.GetPerformance(out Sender.cpu, out Sender.mem);
+            SysPerfomance.GetPerformance();
         }
     }
 }

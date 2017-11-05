@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -14,27 +15,27 @@ namespace Agent
 {
     class Sender
     {
-        private static string host = "";
-        private static string name = "";
         public static string baseUrl = "";
 
+        private string name = "";
+        private Logger logger;
         
         //private static HttpClient client = new HttpClient();
-        public static int cpu;
-        public static int mem;
+        
 
-        public static void Init(string host, string name)
+        public Sender(string name)
         {
-            Sender.host = host;
-            Sender.name = name;
-            Sender.baseUrl = @"http://" + Sender.host + @"/SampleApi/api/performances/set/";
+            this.name = name;
+            if(Program.isLogEnabled)
+                logger = new Logger(name);
+            
         }
         
 
-        public static void Send()
+        public void Send()
         {
-            
-            var url = baseUrl + "?name=" + name + "&cpu=" + cpu + "&memory=" + mem;
+
+            var url = baseUrl + "?cpu=" + SysPerfomance.cpu + "&memory=" + SysPerfomance.mem + "&hostname=" + name;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             request.KeepAlive = true;
             request.Proxy = null;
@@ -44,8 +45,8 @@ namespace Agent
                 using (var response = (HttpWebResponse)request.GetResponse())
                 {
                     var code = response.StatusCode;
-                    WriteComment(" cpu= " + cpu + " memory= " + mem + " " + code);
-                    WriteLog(" cpu= " + cpu + " memory= " + mem + " " + code);
+                    WriteComment(" cpu= " + SysPerfomance.cpu + " memory= " + SysPerfomance.mem + " " + code);
+                    WriteLog(" cpu= " + SysPerfomance.cpu + " memory= " + SysPerfomance.mem + " " + code);
                     /*if (code != HttpStatusCode.OK)
                     {
                         
@@ -60,8 +61,9 @@ namespace Agent
                 WriteLog(e.Message);
             }
         }
-        
-        static void WriteComment(object code)
+
+
+        void WriteComment(object code)
         {
             if (Program.isCommentEnabled)
             {
@@ -69,11 +71,20 @@ namespace Agent
             }
         }
 
-        static void WriteLog(object code)
+        void WriteLog(object code)
         {
             if (Program.isLogEnabled)
             {
-                Logger.Write(code.ToString());
+                logger.Write(code.ToString());
+            }
+        }
+
+        public void CloseLog(int delay)
+        {
+            if (Program.isLogEnabled)
+            {
+                Thread.Sleep(delay);
+                logger?.EndLogging();
             }
         }
     }

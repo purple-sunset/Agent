@@ -9,11 +9,11 @@ namespace Agent
 {
     class Logger
     {
-        private static string fileLocation = "";
-        private static FileStream fs;
-        private static StreamWriter str;
+        private string fileLocation = "";
+        private FileStream fs;
+        private StreamWriter str;
 
-        public static void Init(string fileName)
+        public Logger(string fileName)
         {
             fileLocation = Directory.GetCurrentDirectory() + "\\" + fileName + ".txt";
             fs = new FileStream(fileLocation, FileMode.OpenOrCreate);
@@ -21,13 +21,13 @@ namespace Agent
             str.BaseStream.Seek(0, SeekOrigin.End);
         }
 
-        public static void Write(string message)
+        public void Write(string message)
         {
             str.WriteLine(DateTime.Now + " " + message);
             str.Flush();
         }
 
-        public static void EndLogging()
+        public void EndLogging()
         {
             str.Close();
             fs.Close();
